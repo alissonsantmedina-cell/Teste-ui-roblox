@@ -1,90 +1,65 @@
--- UI Logo Test | Delta Compatible
--- Apenas testes visuais (SEM exploit)
+-- UI Logo Simple | Mobile Friendly
 
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
-
--- ScreenGui
-local gui = Instance.new("ScreenGui")
-gui.Name = "LogoTestUI"
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
 
--- Frame da Logo
-local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(120, 120)
-frame.Position = UDim2.fromScale(0.1, 0.5)
-frame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-frame.BackgroundTransparency = 0.1
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromOffset(120,120)
+frame.Position = UDim2.fromScale(0.5,0.5)
+frame.AnchorPoint = Vector2.new(0.5,0.5)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,25)
 frame.BorderSizePixel = 0
-frame.Parent = gui
 frame.Active = true
 
--- Cantos arredondados
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 18)
-corner.Parent = frame
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,18)
 
--- Imagem da Logo
-local image = Instance.new("ImageLabel")
-image.Size = UDim2.fromScale(1, 1)
-image.BackgroundTransparency = 1
-image.Image = "rbxassetid://117905731202243"
-image.Parent = frame
+local img = Instance.new("ImageLabel", frame)
+img.Size = UDim2.fromScale(1,1)
+img.BackgroundTransparency = 1
+img.Image = "rbxassetid://117905731202243"
 
--- 🔥 Animação ao clicar
-local function clickAnimation()
-	local tweenInfo = TweenInfo.new(
-		0.15,
-		Enum.EasingStyle.Quad,
-		Enum.EasingDirection.Out
-	)
-
-	local shrink = TweenService:Create(
-		frame,
-		tweenInfo,
-		{Size = UDim2.fromOffset(100, 100)}
-	)
-
-	local expand = TweenService:Create(
-		frame,
-		tweenInfo,
-		{Size = UDim2.fromOffset(120, 120)}
-	)
-
-	shrink:Play()
-	shrink.Completed:Wait()
-	expand:Play()
-end
-
--- 🖱️ Drag System (Delta Friendly)
-local dragging = false
-local dragStart
-local startPos
-
-frame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = frame.Position
-
-		clickAnimation()
-
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
+-- ✨ Clique animação
+frame.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.Touch then
+		TweenService:Create(
+			frame,
+			TweenInfo.new(0.12),
+			{Size = frame.Size * 0.9}
+		):Play()
+		task.wait(0.12)
+		TweenService:Create(
+			frame,
+			TweenInfo.new(0.12),
+			{Size = frame.Size / 0.9}
+		):Play()
 	end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
+-- 🖱️ Drag
+local dragging, dragStart, startPos
+
+frame.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = i.Position
+		startPos = frame.Position
+	end
+end)
+
+UIS.InputEnded:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if dragging and i.UserInputType == Enum.UserInputType.Touch then
+		local delta = i.Position - dragStart
 		frame.Position = UDim2.new(
 			startPos.X.Scale,
 			startPos.X.Offset + delta.X,
@@ -94,4 +69,11 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
-print("✅ UI Logo carregada com sucesso!")
+-- 🤏 Pinça (Zoom com dois dedos)
+local lastDist
+UIS.TouchPinch:Connect(function(_, scale)
+	local newSize = math.clamp(frame.Size.X.Offset * scale, 80, 220)
+	frame.Size = UDim2.fromOffset(newSize, newSize)
+end)
+
+print("✅ UI Logo simples carregada")
